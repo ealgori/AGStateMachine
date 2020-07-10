@@ -9,41 +9,23 @@ namespace AGStateMachine.Tests
         [Fact]
         public async Task ShouldChangeStateOnEvent()
         {
-            var sm = new TestStateMachine();
-            var stateInstance = new TestStateInstance();
+            var sm = TestSM1.Create();
+            var stateInstance = new TestSM1.TestStateInstance();
             sm.AddTransition(
-                State.First, 
-                Event.FirstEvent,
+                TestSM1.StateSM1.First, 
+                TestSM1.EventSM1.FirstEvent,
                  (inst) =>
                 {
-                    inst.CurrentState = State.Second;
+                    inst.CurrentState = TestSM1.StateSM1.Second;
                     return Task.CompletedTask;
                 }
             );
 
-            await sm.RaiseEvent(Event.FirstEvent, stateInstance);
+            await sm.RaiseEvent(TestSM1.EventSM1.FirstEvent, stateInstance);
 
-            Assert.Equal(State.Second, stateInstance.CurrentState);
+            Assert.Equal(TestSM1.StateSM1.Second, stateInstance.CurrentState);
         }
 
-        private enum State
-        {
-            First,
-            Second
-        }
 
-        private enum Event
-        {
-            FirstEvent
-        }
-
-        private class TestStateInstance : IInstance<State>
-        {
-            public State CurrentState { get; set; }
-        }
-
-        private class TestStateMachine : AGStateMachine<State, Event, TestStateInstance>
-        {
-        }
     }
 }
