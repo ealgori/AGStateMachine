@@ -13,14 +13,14 @@ namespace AGStateMachine
     {
         private ConcurrentDictionary<(TState,TEvent),Func<TInstance,Task>> _transtions = new ConcurrentDictionary<(TState, TEvent), Func<TInstance, Task>>();
 
-        private void  AddTransition(TState state, TEvent @event, Func<TInstance, Task> function)
+        public void  AddTransition(TState state, TEvent @event, Func<TInstance, Task> function)
         {
             if(function==null)
                 return;
             _transtions[(state, @event)] = function;
         }
 
-        private Task RaiseEvent(TEvent @event, TInstance instance)
+        public Task RaiseEvent(TEvent @event, TInstance instance)
         {
             if (!_transtions.ContainsKey((instance.CurrentState, @event)))
                 return Task.CompletedTask;
