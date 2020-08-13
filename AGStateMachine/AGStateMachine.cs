@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Transactions;
+using DefaultNamespace;
 
 namespace AGStateMachine
 {
@@ -11,11 +13,15 @@ namespace AGStateMachine
         where TInstance : class, IInstance<TState>
 
     {
-        private ConcurrentDictionary<(TState,TEvent),Func<TInstance,Task>> _transtions = new ConcurrentDictionary<(TState, TEvent), Func<TInstance, Task>>();
+        private readonly ConcurrentDictionary<(TState, TEvent), Func<TInstance, Task>> _transtions =
+            new ConcurrentDictionary<(TState, TEvent), Func<TInstance, Task>>();
 
-        public void  AddTransition(TState state, TEvent @event, Func<TInstance, Task> function)
+        private readonly ConditionalWeakTable<TInstance, StateMutator<TInstance, TState>> _table =
+            new ConditionalWeakTable<TInstance, StateMutator<TInstance, TState>>();
+
+        public void AddTransition(TState state, TEvent @event, Func<TInstance, Task> function)
         {
-            if(function==null)
+            if (function == null)
                 return;
             _transtions[(state, @event)] = function;
         }
@@ -24,8 +30,13 @@ namespace AGStateMachine
         {
             if (!_transtions.ContainsKey((instance.CurrentState, @event)))
                 return Task.CompletedTask;
-
-            return _transtions[(instance.CurrentState, @event)].Invoke(instance);
+            
+            var mutator = _table.GetOrCreateValue(instance);
+            return mutator.SendAsync(
+                instance,
+                instance.CurrentState,
+                _transtions[(instance.CurrentState, @event)]
+            );
         }
     }
 }
