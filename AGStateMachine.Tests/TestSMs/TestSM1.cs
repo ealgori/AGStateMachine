@@ -16,6 +16,7 @@
         public class TestStateInstance : IInstance<StateSM1>
         {
             public StateSM1 CurrentState { get; set; }
+            public int Counter { get; set; }
         }
 
         public class TestStateMachine1 : AGStateMachine<StateSM1, EventSM1, TestStateInstance>
