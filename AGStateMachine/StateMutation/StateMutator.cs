@@ -42,10 +42,35 @@ namespace DefaultNamespace
             return tcs.Task;
         }
 
+        public Task SendAsync<TCEvent>(TInstance instance, TCEvent @event, TState currentState, Func<TInstance,TCEvent, Task> func)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            _block.SendAsync(async () =>
+            {
+                try
+                {
+                    if (!Equals(instance.CurrentState, currentState))
+                        return;
+                    await func(instance,@event);
+                    tcs.SetResult(true);
+                }
+                catch (Exception e)
+                {
+                    tcs.SetException(e);
+                }
+            });
+
+            return tcs.Task;
+        }
+
+
+  
 
         ~StateMutator()
         {
             _cts.Cancel();
         }
     }
+    
+    
 }
