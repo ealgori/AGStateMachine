@@ -55,7 +55,7 @@ namespace AGStateMachine.Tests
             var stateInstance = new TestSM1.TestStateInstance();
             var typedEvent = new TypedEvent(3);
             
-            sm.AddTransition(TestSM1.StateSM1.First, typedEvent, (inst, ev) =>
+            sm.AddTransition<TestSM1.TypedEvent>(TestSM1.StateSM1.First, (inst, ev) =>
             {
                 inst.Counter += ev.Counter;
                 inst.CurrentState = TestSM1.StateSM1.Second;

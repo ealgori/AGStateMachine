@@ -13,6 +13,12 @@
             FirstEvent
         }
 
+        public class TypedEvent
+        {
+            public int Counter { get; set; }
+            public void Invoke() { }// only for sequence tests
+        }
+
         public class TestStateInstance : IInstance<StateSM1>
         {
             public StateSM1 CurrentState { get; set; }
