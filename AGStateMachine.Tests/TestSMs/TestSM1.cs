@@ -13,16 +13,17 @@
             FirstEvent
         }
 
+     
         public class TypedEvent
         {
             public int Counter { get; set; }
-            public void Invoke() { }// only for sequence tests
         }
 
         public class TestStateInstance : IInstance<StateSM1>
         {
             public StateSM1 CurrentState { get; set; }
             public int Counter { get; set; }
+            public virtual void Invoke(int seq){}
         }
 
         public class TestStateMachine1 : AGStateMachine<StateSM1, EventSM1, TestStateInstance>
