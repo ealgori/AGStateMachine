@@ -53,7 +53,7 @@ namespace AGStateMachine.Tests
         {
             var sm = TestSM1.Create();
             var stateInstance = new TestSM1.TestStateInstance();
-            var typedEvent = new TypedEvent(3);
+            var typedEvent = new TestSM1.TypedEvent(){Counter = 3};
             
             sm.AddTransition<TestSM1.TypedEvent>(TestSM1.StateSM1.First, (inst, ev) =>
             {
@@ -67,15 +67,7 @@ namespace AGStateMachine.Tests
             Assert.Equal(3, stateInstance.Counter);
         }
 
-        internal class TypedEvent
-        {
-            public int Counter { get;  }
-
-            public TypedEvent(int counter)
-            {
-                Counter = counter;
-            }
-        }
+       
         
         
 
