@@ -27,7 +27,7 @@ namespace AGStateMachine
             _transitions[(state, @event)] = function ?? throw new ArgumentNullException(nameof(function));
         }
 
-        public void AddTransition<TCEvent>(TState state, TCEvent @event, Func<TInstance, TCEvent, Task> function)
+        public void AddTransition<TCEvent>(TState state, Func<TInstance, TCEvent, Task> function)
         {
             _typedTransitions[(state, typeof(TCEvent))] = function ?? throw new ArgumentNullException(nameof(function));
         }
