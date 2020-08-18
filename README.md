@@ -3,7 +3,8 @@ Simple state machine with external state.
 
 ```csharp
 public enum States
-{    FirstState,
+{    
+    FirstState,
     SecondState
 }
         
