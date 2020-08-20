@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AGStateMachine", "AGStateMa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AGStateMachine.Tests", "AGStateMachine.Tests\AGStateMachine.Tests.csproj", "{A9ED93E7-3C2F-4445-9C2E-75E34729592C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo", "Demo\Demo.csproj", "{8F900D52-9E39-4682-851B-A7B3171A8DE5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{A9ED93E7-3C2F-4445-9C2E-75E34729592C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A9ED93E7-3C2F-4445-9C2E-75E34729592C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A9ED93E7-3C2F-4445-9C2E-75E34729592C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F900D52-9E39-4682-851B-A7B3171A8DE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F900D52-9E39-4682-851B-A7B3171A8DE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F900D52-9E39-4682-851B-A7B3171A8DE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F900D52-9E39-4682-851B-A7B3171A8DE5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
