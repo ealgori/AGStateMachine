@@ -46,6 +46,14 @@ public static class Program
 Events process in one thread per state instance sequence, which guarantees state consistency.
 Under the hood used ActionBlock per state instance and weak references, so state machine will not hold state instance for GC.
 
+You can use custom MutatorsStore if you dont like to use ConditionalWeakTable:
+
+```csharp
+// this store based on ConcurrentDictionary
+var store = new MutatorsStoreDict<StateInstance,States>();
+var myStateMachine = new MyStateMachine(store);
+```
+This cause StateInstance will be cached in dictionary forever. (Maybe later this behaviour will be changed)
 
 Also supported custom typed events:
 
