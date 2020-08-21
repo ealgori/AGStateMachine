@@ -4,10 +4,9 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using AGStateMachine;
 
-namespace DefaultNamespace
+namespace AGStateMachine.StateMutation
 {
-    public class StateMutator<TInstance, TState>
-        where TInstance : IInstance<TState>
+    public class StateMutator<TInstance, TState> : IStateMutator<TInstance, TState> where TInstance : IInstance<TState>
         where TState : Enum
     {
         private readonly ActionBlock<Func<Task>> _block;
@@ -18,6 +17,7 @@ namespace DefaultNamespace
             _cts = new CancellationTokenSource();
             var option = new ExecutionDataflowBlockOptions {CancellationToken = _cts.Token};
             _block = new ActionBlock<Func<Task>>(f => f(), option);
+            _block.Completion.ContinueWith(t => Console.WriteLine("Block was stopped"));
         }
 
         public Task SendAsync(TInstance instance, TState currentState, Func<TInstance, Task> func)
