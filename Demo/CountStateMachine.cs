@@ -1,4 +1,5 @@
 ﻿using AGStateMachine;
+using AGStateMachine.MutatorsStore;
 
 namespace Demo
 {
@@ -27,5 +28,9 @@ namespace Demo
                         Count = count;
                 }
         }
-        public class CountStateMachine:AGStateMachine<States,Events,StateInstance>{}
+
+        public class CountStateMachine : AGStateMachine<States, Events, StateInstance>
+        {
+                public CountStateMachine(IMutatorsStore<StateInstance,States> store=null): base(store) {}
+        }
 }

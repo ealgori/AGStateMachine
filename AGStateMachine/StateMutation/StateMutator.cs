@@ -4,10 +4,9 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using AGStateMachine;
 
-namespace DefaultNamespace
+namespace AGStateMachine.StateMutation
 {
-    public class StateMutator<TInstance, TState>
-        where TInstance : IInstance<TState>
+    public class StateMutator<TInstance, TState> : IStateMutator<TInstance, TState> where TInstance : IInstance<TState>
         where TState : Enum
     {
         private readonly ActionBlock<Func<Task>> _block;

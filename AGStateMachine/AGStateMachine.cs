@@ -3,7 +3,8 @@ using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Transactions;
-using DefaultNamespace;
+using AGStateMachine.StateMutation;
+using AGStateMachine.MutatorsStore;
 
 namespace AGStateMachine
 {
@@ -15,12 +16,24 @@ namespace AGStateMachine
     {
         private readonly ConcurrentDictionary<(TState, TEvent), Func<TInstance, Task>> _transitions =
             new ConcurrentDictionary<(TState, TEvent), Func<TInstance, Task>>();
+
         private readonly ConcurrentDictionary<(TState, Type ), Delegate> _typedTransitions =
             new ConcurrentDictionary<(TState, Type), Delegate>();
-        
 
-        private readonly ConditionalWeakTable<TInstance, StateMutator<TInstance, TState>> _table =
-            new ConditionalWeakTable<TInstance, StateMutator<TInstance, TState>>();
+
+        private IMutatorsStore<TInstance, TState> _mutatorsStore;
+
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="mutatorsStore">States store for mutators. Default: StateMutator based on ConcurrentDictionary</param>
+        public AGStateMachine(IMutatorsStore<TInstance, TState> mutatorsStore = null )
+        {
+            _mutatorsStore = mutatorsStore == null
+                ? new MutatorsStore<TInstance, TState>(
+                    new ConcurrentDictionary<TInstance, IStateMutator<TInstance, TState>>())
+                : mutatorsStore;
+        }
 
         public void AddTransition(TState state, TEvent @event, Func<TInstance, Task> function)
         {
@@ -36,13 +49,12 @@ namespace AGStateMachine
         {
             if (!_transitions.TryGetValue((instance.CurrentState, @event), out var func))
                 return Task.CompletedTask;
-            var mutator = _table.GetOrCreateValue(instance);
+            var mutator = _mutatorsStore.GetOrCreateMutator(instance, () => new StateMutator<TInstance, TState>());
             return mutator.SendAsync(
                 instance,
                 instance.CurrentState,
                 func
             );
-
         }
 
         public Task RaiseEvent<TCEvent>(TCEvent @event, TInstance instance)
@@ -52,14 +64,13 @@ namespace AGStateMachine
                 return Task.CompletedTask;
             }
 
-            var mutator = _table.GetOrCreateValue(instance);
+            var mutator = _mutatorsStore.GetOrCreateMutator(instance, () => new StateMutator<TInstance, TState>());
             return mutator.SendAsync(
                 instance,
                 @event,
-                instance.CurrentState, 
+                instance.CurrentState,
                 func as Func<TInstance, TCEvent, Task>
             );
-
         }
     }
 }

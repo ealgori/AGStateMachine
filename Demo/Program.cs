@@ -1,11 +1,16 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using AGStateMachine;
+using AGStateMachine.MutatorsStore;
+using AGStateMachine.MutatorsStore.Extensions;
+using AGStateMachine.StateMutation;
 using Demo.Infrustructure;
 
 namespace Demo
@@ -18,9 +23,14 @@ namespace Demo
             sw.Restart();
             int instanceCount = 1000;
             int messagesPerThread = 300;
-            var countSM = new CountStateMachine();
-            countSM.AddTransition(States.A, Events.M, OnM);
-            countSM.AddTransition<TypedEvent>(States.A, OnTE);
+            // threadsafe IDictionary for mutators store
+            var dict = new ConditionalWeakTable<StateInstance, IStateMutator<StateInstance, States>>()
+                .ToDictionaryWrapped();
+            // custom store for mutators
+            var store = new MutatorsStore<StateInstance, States>(dict);
+            var countSm = new CountStateMachine(store);
+            countSm.AddTransition(States.A, Events.M, OnM);
+            countSm.AddTransition<TypedEvent>(States.A, OnTE);
 
 
             var instances = new List<StateInstance>(instanceCount);
@@ -32,8 +42,8 @@ namespace Demo
             {
                 for (int i = 0; i < messagesPerThread / 2; i++)
                 {
-                    var eventTasks = instances.Select((inst) => countSM.RaiseEvent(Events.M, inst));
-                    var typedEventsTask = instances.Select((inst) => countSM.RaiseEvent(new TypedEvent(1), inst))
+                    var eventTasks = instances.Select((inst) => countSm.RaiseEvent(Events.M, inst));
+                    var typedEventsTask = instances.Select((inst) => countSm.RaiseEvent(new TypedEvent(1), inst))
                         .ToArray();
                     await Task.WhenAll(eventTasks)
                             .ConfigureAwait(false)
@@ -44,7 +54,7 @@ namespace Demo
                     Interlocked.Increment(ref counter);
 
                     ConsoleUtility.WriteProgressBar((int)
-                                                    Volatile.Read(ref counter)*100/  
+                                                    Volatile.Read(ref counter) * 100 /
                                                     (messagesPerThread / 2 * Environment.ProcessorCount)
                         , true);
                 }
