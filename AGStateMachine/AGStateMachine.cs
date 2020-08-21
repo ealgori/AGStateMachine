@@ -23,16 +23,10 @@ namespace AGStateMachine
 
         private IMutatorsStore<TInstance, TState> _mutatorsStore;
 
-            /// <summary>
-            /// 
-            /// </summary>
-            /// <param name="mutatorsStore">States store for mutators. Default: StateMutator based on ConcurrentDictionary</param>
-        public AGStateMachine(IMutatorsStore<TInstance, TState> mutatorsStore = null )
+      
+        protected AGStateMachine(IMutatorsStore<TInstance, TState> mutatorsStore = null)
         {
-            _mutatorsStore = mutatorsStore == null
-                ? new MutatorsStore<TInstance, TState>(
-                    new ConcurrentDictionary<TInstance, IStateMutator<TInstance, TState>>())
-                : mutatorsStore;
+            _mutatorsStore = mutatorsStore ?? new MutatorsStoreWeak<TInstance, TState>();
         }
 
         public void AddTransition(TState state, TEvent @event, Func<TInstance, Task> function)

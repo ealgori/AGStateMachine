@@ -1,16 +1,11 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using AGStateMachine;
 using AGStateMachine.MutatorsStore;
-using AGStateMachine.MutatorsStore.Extensions;
-using AGStateMachine.StateMutation;
 using Demo.Infrustructure;
 
 namespace Demo
@@ -21,20 +16,19 @@ namespace Demo
         {
             var sw = new Stopwatch();
             sw.Restart();
-            int instanceCount = 1000;
+            int instanceCount = 300;
             int messagesPerThread = 300;
-            // threadsafe IDictionary for mutators store
-            var dict = new ConditionalWeakTable<StateInstance, IStateMutator<StateInstance, States>>()
-                .ToDictionaryWrapped();
-            // custom store for mutators
-            var store = new MutatorsStore<StateInstance, States>(dict);
-            var countSm = new CountStateMachine(store);
+            // var store = new MutatorsStoreDict<StateInstance,States>();
+            var countSm = new CountStateMachine();
             countSm.AddTransition(States.A, Events.M, OnM);
             countSm.AddTransition<TypedEvent>(States.A, OnTE);
 
-
+            
             var instances = new List<StateInstance>(instanceCount);
             for (int i = 0; i < instanceCount; i++) instances.Add(new StateInstance());
+            var singleInstance = new StateInstance();
+            await countSm.RaiseEvent(Events.M, singleInstance);
+            singleInstance = null;
 
             int counter = 0;
             ConsoleUtility.WriteProgressBar(counter);
@@ -79,6 +73,7 @@ namespace Demo
 {instanceCount} instances 
 {messagesPerThread} messages per instance
 {sw.Elapsed.TotalSeconds} seconds");
+
         }
 
         public static Task OnM(StateInstance instance)

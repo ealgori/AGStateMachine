@@ -17,6 +17,7 @@ namespace AGStateMachine.StateMutation
             _cts = new CancellationTokenSource();
             var option = new ExecutionDataflowBlockOptions {CancellationToken = _cts.Token};
             _block = new ActionBlock<Func<Task>>(f => f(), option);
+            _block.Completion.ContinueWith(t => Console.WriteLine("Block was stopped"));
         }
 
         public Task SendAsync(TInstance instance, TState currentState, Func<TInstance, Task> func)
