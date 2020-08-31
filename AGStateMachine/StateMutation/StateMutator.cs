@@ -6,12 +6,13 @@ using AGStateMachine;
 
 namespace AGStateMachine.StateMutation
 {
+   
     public class StateMutator<TInstance, TState> : IStateMutator<TInstance, TState> where TInstance : IInstance<TState>
         where TState : Enum
     {
         private readonly ActionBlock<Func<Task>> _block;
         private readonly CancellationTokenSource _cts;
-
+        protected readonly Task CompletedTask = Task.CompletedTask;
         public StateMutator()
         {
             _cts = new CancellationTokenSource();
@@ -26,7 +27,7 @@ namespace AGStateMachine.StateMutation
             return _block.SendAsync(() =>
             {
                 if (!Equals(currentState, instance.CurrentState))
-                    return Task.CompletedTask;
+                    return CompletedTask;
                 return func(instance);
             });
         }
@@ -57,7 +58,7 @@ namespace AGStateMachine.StateMutation
         {
             if (!Equals(currentState, instance.CurrentState))
             {
-                return Task.CompletedTask;
+                return CompletedTask;
             }
 
             return _block.SendAsync(() => func(instance, @event));
