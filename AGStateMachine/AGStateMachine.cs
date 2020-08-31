@@ -54,7 +54,7 @@ namespace AGStateMachine
             if(!_transitions.TryGetValue((instance.CurrentState,@event), out var del))
                 return CompletedTask;
             var mutator = _mutatorsStore.GetOrCreateMutator(instance, () => new StateMutator<TInstance, TState>());
-            return mutator.ScheduleAsync(instance, instance.CurrentState, del);
+            return mutator.ProcessAsync(instance, instance.CurrentState, del);
 
         }
 
