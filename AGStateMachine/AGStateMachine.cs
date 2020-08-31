@@ -17,13 +17,14 @@ namespace AGStateMachine
         private readonly ConcurrentDictionary<(TState, TEvent), Func<TInstance, Task>> _transitions =
             new ConcurrentDictionary<(TState, TEvent), Func<TInstance, Task>>();
 
+
         private readonly ConcurrentDictionary<(TState, Type ), Delegate> _typedTransitions =
             new ConcurrentDictionary<(TState, Type), Delegate>();
 
 
         private IMutatorsStore<TInstance, TState> _mutatorsStore;
 
-      
+
         protected AGStateMachine(IMutatorsStore<TInstance, TState> mutatorsStore = null)
         {
             _mutatorsStore = mutatorsStore ?? new MutatorsStoreWeak<TInstance, TState>();
@@ -39,19 +40,70 @@ namespace AGStateMachine
             _typedTransitions[(state, typeof(TCEvent))] = function ?? throw new ArgumentNullException(nameof(function));
         }
 
-        public Task RaiseEvent(TEvent @event, TInstance instance)
+        /// <summary>
+        /// Waits till event will be processed by event processing queue
+        /// </summary>
+        /// <param name="event"></param>
+        /// <param name="instance"></param>
+        /// <returns></returns>
+        public Task RaiseEvent(TEvent @event, TInstance instance) =>
+            ProcessEvent(
+                @event,
+                instance,
+                (m, d) => m.ProcessAsync(instance, instance.CurrentState, d));
+
+
+        /// <summary>
+        /// Wait till event processing queue accept event
+        /// </summary>
+        /// <param name="event"></param>
+        /// <param name="instance"></param>
+        /// <returns></returns>
+        public Task ScheduleEvent(TEvent @event, TInstance instance)
+            =>
+                ProcessEvent(
+                    @event,
+                    instance,
+                    (m, d) => m.ScheduleAsync(instance, instance.CurrentState, d));
+
+
+        private Task ProcessEvent(TEvent @event, TInstance instance,
+            Func<IStateMutator<TInstance, TState>, Func<TInstance, Task>, Task> del)
         {
             if (!_transitions.TryGetValue((instance.CurrentState, @event), out var func))
                 return Task.CompletedTask;
             var mutator = _mutatorsStore.GetOrCreateMutator(instance, () => new StateMutator<TInstance, TState>());
-            return mutator.SendAsync(
-                instance,
-                instance.CurrentState,
-                func
-            );
+            return del(mutator, func);
         }
 
+        /// <summary>
+        /// Waits till event will be processed by event processing queue
+        /// </summary>
+        /// <param name="event"></param>
+        /// <param name="instance"></param>
+        /// <returns></returns>
         public Task RaiseEvent<TCEvent>(TCEvent @event, TInstance instance)
+        {
+            return ProcessEvent<TCEvent>(@event, instance,
+                (m, d) =>
+                    m.ProcessAsync(instance, @event, instance.CurrentState, d as Func<TInstance, TCEvent, Task>));
+        }
+
+        /// <summary>
+        /// Wait till event processing queue accept event
+        /// </summary>
+        /// <param name="event"></param>
+        /// <param name="instance"></param>
+        /// <returns></returns>
+        public Task ScheduleEvent<TCEvent>(TCEvent @event, TInstance instance)
+        {
+            return ProcessEvent<TCEvent>(@event, instance,
+                (m, d) =>
+                    m.ScheduleAsync(instance, @event, instance.CurrentState, d as Func<TInstance, TCEvent, Task>));
+        }
+
+        private Task ProcessEvent<TCEvent>(TCEvent @event, TInstance instance,
+            Func<IStateMutator<TInstance, TState>, Delegate, Task> funcRef)
         {
             if (!_typedTransitions.TryGetValue((instance.CurrentState, typeof(TCEvent)), out var func))
             {
@@ -59,12 +111,7 @@ namespace AGStateMachine
             }
 
             var mutator = _mutatorsStore.GetOrCreateMutator(instance, () => new StateMutator<TInstance, TState>());
-            return mutator.SendAsync(
-                instance,
-                @event,
-                instance.CurrentState,
-                func as Func<TInstance, TCEvent, Task>
-            );
+            return funcRef(mutator, func);
         }
     }
 }

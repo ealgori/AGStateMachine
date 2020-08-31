@@ -20,7 +20,18 @@ namespace AGStateMachine.StateMutation
             _block.Completion.ContinueWith(t => Console.WriteLine("Block was stopped"));
         }
 
-        public Task SendAsync(TInstance instance, TState currentState, Func<TInstance, Task> func)
+
+        public Task ScheduleAsync(TInstance instance, TState currentState, Func<TInstance, Task> func)
+        {
+            return _block.SendAsync(() =>
+            {
+                if (!Equals(currentState, instance.CurrentState))
+                    return Task.CompletedTask;
+                return func(instance);
+            });
+        }
+
+        public Task ProcessAsync(TInstance instance, TState currentState, Func<TInstance, Task> func)
         {
             var tcs = new TaskCompletionSource<bool>();
             _block.SendAsync(async () =>
@@ -41,7 +52,19 @@ namespace AGStateMachine.StateMutation
             return tcs.Task;
         }
 
-        public Task SendAsync<TCEvent>(TInstance instance, TCEvent @event, TState currentState, Func<TInstance,TCEvent, Task> func)
+        public Task ScheduleAsync<TCEvent>(TInstance instance, TCEvent @event, TState currentState,
+            Func<TInstance, TCEvent, Task> func)
+        {
+            if (!Equals(currentState, instance.CurrentState))
+            {
+                return Task.CompletedTask;
+            }
+
+            return _block.SendAsync(() => func(instance, @event));
+        }
+
+        public Task ProcessAsync<TCEvent>(TInstance instance, TCEvent @event, TState currentState,
+            Func<TInstance, TCEvent, Task> func)
         {
             var tcs = new TaskCompletionSource<bool>();
             _block.SendAsync(async () =>
@@ -50,7 +73,7 @@ namespace AGStateMachine.StateMutation
                 {
                     if (!Equals(instance.CurrentState, currentState))
                         return;
-                    await func(instance,@event);
+                    await func(instance, @event);
                     tcs.SetResult(true);
                 }
                 catch (Exception e)
@@ -63,13 +86,9 @@ namespace AGStateMachine.StateMutation
         }
 
 
-  
-
         ~StateMutator()
         {
             _cts.Cancel();
         }
     }
-    
-    
 }
