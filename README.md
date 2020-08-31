@@ -39,7 +39,7 @@ public static class Program
          // await waits while event will be processed and buble up possible exceptions.
          await stateMachine.RaiseEvent(Events.OnTick, stateInstance);  
          // await waits while event will be accepted by proccessing queue.
-         await stateMachine.RaiseEvent(Events.OnTick, stateInstance);  
+         await stateMachine.ScheduleEvent(Events.OnTick, stateInstance);  
          
          
     }
