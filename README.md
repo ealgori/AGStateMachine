@@ -10,7 +10,7 @@ public enum States
         
 public enum Events
 {
-    OnTick
+    OnTick, OnBick
 }
     
 public class StateInstance : IInstance<States>
@@ -35,11 +35,22 @@ public static class Program
                 if (inst.Counter == 10) // you don`t have to change state on every event;
                     inst.CurrentState = States.SecondState;
             });
+            
+          // sync transition handler
+          stateMachine.AddTransition(States.FirstState, Events.OnBick,
+            (inst) =>
+            {
+                inst.Counter++;
+                if (inst.Counter == 5)
+                    inst.CurrentState = States.SecondState;
+            });
+         
                 
          // await waits while event will be processed and buble up possible exceptions.
          await stateMachine.RaiseEvent(Events.OnTick, stateInstance);  
          // await waits while event will be accepted by proccessing queue.
          await stateMachine.ScheduleEvent(Events.OnTick, stateInstance);  
+         await stateMachine.ScheduleEvent(Events.OnBick, stateInstance);  
          
          
     }
