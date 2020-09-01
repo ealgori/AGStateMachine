@@ -15,8 +15,8 @@ namespace AGStateMachine
 
     {
         
-        private readonly ConcurrentDictionary<(TState, TEvent), Func<TInstance, Task>> _transitions =
-            new ConcurrentDictionary<(TState, TEvent), Func<TInstance, Task>>();
+        private readonly ConcurrentDictionary<(TState, TEvent), Delegate> _transitions =
+            new ConcurrentDictionary<(TState, TEvent), Delegate>();
 
 
         private readonly ConcurrentDictionary<(TState, Type ), Delegate> _typedTransitions =
@@ -37,10 +37,19 @@ namespace AGStateMachine
         {
             _transitions[(state, @event)] = function ?? throw new ArgumentNullException(nameof(function));
         }
+        
+        public void AddTransition(TState state, TEvent @event, Action<TInstance> action)
+        {
+            _transitions[(state, @event)] = action ?? throw new ArgumentNullException(nameof(action));
+        }
 
         public void AddTransition<TCEvent>(TState state, Func<TInstance, TCEvent, Task> function)
         {
             _typedTransitions[(state, typeof(TCEvent))] = function ?? throw new ArgumentNullException(nameof(function));
+        }
+        public void AddTransition<TCEvent>(TState state, Action<TInstance, TCEvent> action)
+        {
+            _typedTransitions[(state, typeof(TCEvent))] = action ?? throw new ArgumentNullException(nameof(action));
         }
 
         /// <summary>
@@ -54,8 +63,16 @@ namespace AGStateMachine
             if(!_transitions.TryGetValue((instance.CurrentState,@event), out var del))
                 return CompletedTask;
             var mutator = _mutatorsStore.GetOrCreateMutator(instance, () => new StateMutator<TInstance, TState>());
-            return mutator.ProcessAsync(instance, instance.CurrentState, del);
-
+            switch (del)
+            {
+                case Func<TInstance,Task> aFunc: return mutator.ProcessAsync(instance, instance.CurrentState, aFunc); 
+                //TODO: Ambiguity. Unclear for user whats happened when task completed. Is this sync delegate shceduled or already completed?
+                // in this context its scheduled, but upper function mean wait untill raising
+                case Action<TInstance> sAction:return mutator.ScheduleAsync(instance, instance.CurrentState, sAction);
+                default:
+                    throw new InvalidOperationException("Not supported transitions delegate");
+            }
+            
         }
 
 
@@ -69,8 +86,16 @@ namespace AGStateMachine
         {
             if(!_transitions.TryGetValue((instance.CurrentState,@event), out var del))
                 return CompletedTask;
+            
+            
             var mutator = _mutatorsStore.GetOrCreateMutator(instance, () => new StateMutator<TInstance, TState>());
-            return mutator.ScheduleAsync(instance, instance.CurrentState, del);
+            switch (del)
+            {
+                case Func<TInstance,Task> aFunc: return mutator.ScheduleAsync(instance, instance.CurrentState, aFunc); 
+                case Action<TInstance> sAction:return mutator.ScheduleAsync(instance, instance.CurrentState, sAction);
+                default:
+                    throw new InvalidOperationException("Not supported transitions delegate");
+            }
         }
 
       
@@ -86,8 +111,14 @@ namespace AGStateMachine
                 return CompletedTask;
             ;
             var mutator = _mutatorsStore.GetOrCreateMutator(instance, () => new StateMutator<TInstance, TState>());
-            return mutator.ProcessAsync(instance, @event, instance.CurrentState,
-                del as Func<TInstance, TCEvent, Task>);
+
+            switch (del)
+            {
+                case Func<TInstance,TCEvent,Task> aFunc:return mutator.ProcessAsync(instance, @event, instance.CurrentState, aFunc);
+                case Action<TInstance,TCEvent> sAction:return mutator.ScheduleAsync(instance, @event, instance.CurrentState, sAction);
+                default:
+                    throw new InvalidOperationException("Non suported transition delegate");
+            }
         }
 
         /// <summary>
@@ -102,8 +133,14 @@ namespace AGStateMachine
                 return CompletedTask;
 
             var mutator = _mutatorsStore.GetOrCreateMutator(instance, () => new StateMutator<TInstance, TState>());
-            return mutator.ScheduleAsync(instance, @event, instance.CurrentState,
-                del as Func<TInstance, TCEvent, Task>);
+            
+            switch (del)
+            {
+                case Func<TInstance,TCEvent,Task> aFunc:return mutator.ScheduleAsync(instance, @event, instance.CurrentState, aFunc);
+                case Action<TInstance,TCEvent> sAction:return mutator.ScheduleAsync(instance, @event, instance.CurrentState, sAction);
+                default:
+                    throw new InvalidOperationException("Non suported transition delegate");
+            }
         }
 
        

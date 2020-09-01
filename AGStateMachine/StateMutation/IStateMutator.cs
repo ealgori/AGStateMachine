@@ -12,8 +12,11 @@ namespace AGStateMachine.StateMutation
             Func<TInstance, TCEvent, Task> func);
 
         Task ScheduleAsync(TInstance instance, TState currentState, Func<TInstance, Task> func);
+        Task ScheduleAsync(TInstance instance, TState currentState, Action<TInstance> action);
 
         Task ScheduleAsync<TCEvent>(TInstance instance, TCEvent @event, TState currentState,
             Func<TInstance, TCEvent, Task> func);
+        Task ScheduleAsync<TCEvent>(TInstance instance, TCEvent @event, TState currentState,
+            Action<TInstance, TCEvent> action);
     }
 }

@@ -6,13 +6,13 @@ using AGStateMachine;
 
 namespace AGStateMachine.StateMutation
 {
-   
     public class StateMutator<TInstance, TState> : IStateMutator<TInstance, TState> where TInstance : IInstance<TState>
         where TState : Enum
     {
         private readonly ActionBlock<Func<Task>> _block;
         private readonly CancellationTokenSource _cts;
         protected readonly Task CompletedTask = Task.CompletedTask;
+
         public StateMutator()
         {
             _cts = new CancellationTokenSource();
@@ -25,10 +25,16 @@ namespace AGStateMachine.StateMutation
         public Task ScheduleAsync(TInstance instance, TState currentState, Func<TInstance, Task> func)
         {
             return _block.SendAsync(() =>
+                !Equals(currentState, instance.CurrentState) ? CompletedTask : func(instance));
+        }
+
+        public Task ScheduleAsync(TInstance instance, TState currentState, Action<TInstance> action)
+        {
+            return _block.SendAsync(() =>
             {
-                if (!Equals(currentState, instance.CurrentState))
-                    return CompletedTask;
-                return func(instance);
+                if (Equals(currentState, instance.CurrentState))
+                    action(instance);
+                return CompletedTask;
             });
         }
 
@@ -62,6 +68,15 @@ namespace AGStateMachine.StateMutation
             }
 
             return _block.SendAsync(() => func(instance, @event));
+        }
+
+        public Task ScheduleAsync<TCEvent>(TInstance instance, TCEvent @event, TState currentState, Action<TInstance, TCEvent> action)
+        {
+            return _block.SendAsync(() =>
+            {
+                action(instance, @event);
+                return CompletedTask;
+            });
         }
 
         public Task ProcessAsync<TCEvent>(TInstance instance, TCEvent @event, TState currentState,
