@@ -25,7 +25,6 @@ namespace AGStateMachine
 
         private IMutatorsStore<TInstance, TState> _mutatorsStore;
 
-        protected static readonly Task CompletedTask = Task.CompletedTask; 
 
 
         protected AGStateMachine(IMutatorsStore<TInstance, TState> mutatorsStore = null)
@@ -61,7 +60,7 @@ namespace AGStateMachine
         public Task RaiseEvent(TEvent @event, TInstance instance) 
         {
             if(!_transitions.TryGetValue((instance.CurrentState,@event), out var del))
-                return CompletedTask;
+                return Task.CompletedTask;
             var mutator = _mutatorsStore.GetOrCreateMutator(instance, () => new StateMutator<TInstance, TState>());
             switch (del)
             {
@@ -85,7 +84,7 @@ namespace AGStateMachine
         public Task ScheduleEvent(TEvent @event, TInstance instance)
         {
             if(!_transitions.TryGetValue((instance.CurrentState,@event), out var del))
-                return CompletedTask;
+                return Task.CompletedTask;
             
             
             var mutator = _mutatorsStore.GetOrCreateMutator(instance, () => new StateMutator<TInstance, TState>());
@@ -108,7 +107,7 @@ namespace AGStateMachine
         public Task RaiseEvent<TCEvent>(TCEvent @event, TInstance instance)
         {
             if (!_typedTransitions.TryGetValue((instance.CurrentState, typeof(TCEvent)), out var del))
-                return CompletedTask;
+                return Task.CompletedTask;
             ;
             var mutator = _mutatorsStore.GetOrCreateMutator(instance, () => new StateMutator<TInstance, TState>());
 
@@ -130,7 +129,7 @@ namespace AGStateMachine
         public Task ScheduleEvent<TCEvent>(TCEvent @event, TInstance instance)
         {
             if (!_typedTransitions.TryGetValue((instance.CurrentState, typeof(TCEvent)), out var del))
-                return CompletedTask;
+                return Task.CompletedTask;
 
             var mutator = _mutatorsStore.GetOrCreateMutator(instance, () => new StateMutator<TInstance, TState>());
             

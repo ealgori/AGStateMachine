@@ -11,7 +11,6 @@ namespace AGStateMachine.StateMutation
     {
         private readonly ActionBlock<Func<Task>> _block;
         private readonly CancellationTokenSource _cts;
-        protected readonly Task CompletedTask = Task.CompletedTask;
 
         public StateMutator()
         {
@@ -25,7 +24,7 @@ namespace AGStateMachine.StateMutation
         public Task ScheduleAsync(TInstance instance, TState currentState, Func<TInstance, Task> func)
         {
             return _block.SendAsync(() =>
-                !Equals(currentState, instance.CurrentState) ? CompletedTask : func(instance));
+                !Equals(currentState, instance.CurrentState) ? Task.CompletedTask : func(instance));
         }
 
         public Task ScheduleAsync(TInstance instance, TState currentState, Action<TInstance> action)
@@ -34,7 +33,7 @@ namespace AGStateMachine.StateMutation
             {
                 if (Equals(currentState, instance.CurrentState))
                     action(instance);
-                return CompletedTask;
+                return Task.CompletedTask;
             });
         }
 
@@ -64,7 +63,7 @@ namespace AGStateMachine.StateMutation
         {
             if (!Equals(currentState, instance.CurrentState))
             {
-                return CompletedTask;
+                return Task.CompletedTask;
             }
 
             return _block.SendAsync(() => func(instance, @event));
@@ -75,7 +74,7 @@ namespace AGStateMachine.StateMutation
             return _block.SendAsync(() =>
             {
                 action(instance, @event);
-                return CompletedTask;
+                return Task.CompletedTask;
             });
         }
 
